@@ -1,21 +1,10 @@
 import Link from 'next/link'
+import Navbar from './components/Navbar'
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-white font-sans">
-      {/* Nav */}
-      <nav className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-        <span className="text-2xl font-bold text-green-800" style={{fontFamily: 'Georgia, serif'}}>LenderRep</span>
-        <div className="hidden md:flex items-center gap-6 text-sm text-gray-500">
-          <Link href="/loan-officers/raleigh-nc" className="hover:text-green-800">Find a loan officer</Link>
-          <Link href="/states" className="hover:text-green-800">Browse by state</Link>
-          <Link href="#how-it-works" className="hover:text-green-800">How it works</Link>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link href="/sign-in" className="text-sm text-green-800 font-medium">Sign in</Link>
-          <Link href="/claim" className="text-sm bg-green-800 text-white px-4 py-2 rounded-lg hover:bg-green-700">Claim your profile</Link>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Hero */}
       <section className="bg-green-50 px-6 py-16 text-center border-b border-gray-100">
