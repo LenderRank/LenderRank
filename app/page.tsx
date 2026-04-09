@@ -1,7 +1,13 @@
 import Link from 'next/link'
 import Navbar from './components/Navbar'
+import { supabase } from './lib/supabase'
 
-export default function Home() {
+export default async function Home() {
+  const { data: topOfficers } = await supabase
+    .from('loan_officers')
+    .select('id, name, slug, company, city, state, initials, avatar_color, avg_rating, review_count, specialties')
+    .order('ranking_score', { ascending: false })
+    .limit(4)
   return (
     <main className="min-h-screen bg-white font-sans">
       <Navbar />
@@ -29,16 +35,10 @@ export default function Home() {
           <Link href="/loan-officers/raleigh-nc" className="text-sm text-green-800">See all →</Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {[
-            {initials:'SJ', name:'Sarah Johnson', company:'Pinnacle Mortgage', rating:'4.9', reviews:48, color:'bg-green-100 text-green-900', specialty:'FHA, VA, Conventional'},
-            {initials:'MC', name:'Mark Chen', company:'Atlantic Home Loans', rating:'4.8', reviews:31, color:'bg-teal-100 text-teal-900', specialty:'Jumbo, Conventional'},
-            {initials:'DP', name:'Diana Patel', company:'Cardinal Home Lending', rating:'4.8', reviews:27, color:'bg-orange-100 text-orange-900', specialty:'First-time buyer specialist'},
-            {initials:'TR', name:'Tom Rivera', company:'Triangle Mortgage Group', rating:'4.7', reviews:19, color:'bg-amber-100 text-amber-900', specialty:'VA, Reverse Mortgage'},
-          ].map((lo) => (
-            <div key={lo.name} className="bg-white border border-gray-100 rounded-xl p-4 hover:border-gray-200 cursor-pointer relative">
-              <button className="absolute top-3 right-3 w-7 h-7 rounded-full border border-gray-200 bg-gray-50 text-gray-400 text-xs flex items-center justify-center hover:bg-green-50 hover:border-green-300 hover:text-green-700">♡</button>
-              <div className="flex items-center gap-3 mb-3 pr-8">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${lo.color}`}>{lo.initials}</div>
+          {(topOfficers ?? []).map((lo) => (
+            <Link key={lo.id} href={`/loan-officers/${lo.slug}`} className="bg-white border border-gray-100 rounded-xl p-4 hover:border-gray-200 cursor-pointer relative block">
+              <div className="flex items-center gap-3 mb-3">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${lo.avatar_color}`}>{lo.initials}</div>
                 <div>
                   <p className="text-sm font-medium text-gray-900">{lo.name}</p>
                   <p className="text-xs text-gray-500">{lo.company}</p>
@@ -48,12 +48,12 @@ export default function Home() {
                 <span className="w-1.5 h-1.5 rounded-full bg-green-600 inline-block"></span>NMLS Verified
               </span>
               <div className="flex items-center gap-1.5 mb-1">
-                <span className="text-sm font-medium text-gray-900">{lo.rating}</span>
+                <span className="text-sm font-medium text-gray-900">{lo.avg_rating}</span>
                 <span className="text-amber-500 text-xs">★★★★★</span>
-                <span className="text-xs text-gray-400">{lo.reviews} reviews</span>
+                <span className="text-xs text-gray-400">{lo.review_count} reviews</span>
               </div>
-              <p className="text-xs text-gray-400 pt-2 border-t border-gray-100">Raleigh, NC · {lo.specialty}</p>
-            </div>
+              <p className="text-xs text-gray-400 pt-2 border-t border-gray-100">{lo.city}, {lo.state} · {lo.specialties?.slice(0, 2).join(', ')}</p>
+            </Link>
           ))}
         </div>
       </section>

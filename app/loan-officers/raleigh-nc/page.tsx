@@ -1,53 +1,15 @@
 import Link from 'next/link'
+import { supabase } from '../../lib/supabase'
 
-const officers = [
-  {
-    slug: 'sarah-johnson',
-    initials: 'SJ',
-    name: 'Sarah Johnson',
-    company: 'Pinnacle Mortgage',
-    rating: 4.9,
-    reviews: 48,
-    experience: 12,
-    specialties: ['FHA', 'VA', 'Conventional'],
-    color: 'bg-green-100 text-green-900',
-  },
-  {
-    slug: 'mark-chen',
-    initials: 'MC',
-    name: 'Mark Chen',
-    company: 'Atlantic Home Loans',
-    rating: 4.8,
-    reviews: 31,
-    experience: 8,
-    specialties: ['Jumbo', 'Conventional'],
-    color: 'bg-teal-100 text-teal-900',
-  },
-  {
-    slug: 'diana-patel',
-    initials: 'DP',
-    name: 'Diana Patel',
-    company: 'Cardinal Home Lending',
-    rating: 4.8,
-    reviews: 27,
-    experience: 6,
-    specialties: ['FHA', 'First-time buyer'],
-    color: 'bg-orange-100 text-orange-900',
-  },
-  {
-    slug: 'tom-rivera',
-    initials: 'TR',
-    name: 'Tom Rivera',
-    company: 'Triangle Mortgage Group',
-    rating: 4.7,
-    reviews: 19,
-    experience: 15,
-    specialties: ['VA', 'Reverse Mortgage'],
-    color: 'bg-amber-100 text-amber-900',
-  },
-]
+export default async function RaleighPage() {
+  const { data: officers } = await supabase
+    .from('loan_officers')
+    .select('id, name, slug, company, city, state, initials, avatar_color, avg_rating, review_count, years_experience, specialties')
+    .eq('city', 'Raleigh')
+    .eq('state', 'NC')
+    .order('ranking_score', { ascending: false })
 
-export default function RaleighPage() {
+  const officerList = officers ?? []
   return (
     <main className="min-h-screen bg-white font-sans">
       {/* Nav */}
@@ -85,7 +47,7 @@ export default function RaleighPage() {
             Browse and compare the highest-rated licensed loan officers in Raleigh based on verified client reviews. All officers are NMLS verified.
           </p>
           <div className="flex flex-wrap gap-4 text-xs text-green-800">
-            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-600 inline-block"></span>{officers.length} loan officers listed</span>
+            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-600 inline-block"></span>{officerList.length} loan officers listed</span>
             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-600 inline-block"></span>All NMLS verified</span>
             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-600 inline-block"></span>Ranked by verified reviews</span>
           </div>
@@ -107,7 +69,7 @@ export default function RaleighPage() {
       {/* Officer List */}
       <section className="px-6 py-8">
         <div className="max-w-4xl mx-auto space-y-4">
-          {officers.map((lo, index) => (
+          {officerList.map((lo, index) => (
             <Link href={`/loan-officers/${lo.slug}`} key={lo.slug}>
               <div className="border border-gray-100 rounded-xl p-5 hover:border-green-200 hover:shadow-sm cursor-pointer flex gap-4 items-start transition-all">
                 {/* Rank */}
@@ -116,7 +78,7 @@ export default function RaleighPage() {
                 </div>
 
                 {/* Avatar */}
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${lo.color}`}>
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${lo.avatar_color}`}>
                   {lo.initials}
                 </div>
 
@@ -133,19 +95,19 @@ export default function RaleighPage() {
                     </div>
                     <div className="text-right flex-shrink-0">
                       <div className="flex items-center gap-1 justify-end mb-1">
-                        <span className="text-base font-bold text-gray-900">{lo.rating}</span>
+                        <span className="text-base font-bold text-gray-900">{lo.avg_rating}</span>
                         <span className="text-amber-500 text-sm">★★★★★</span>
                       </div>
-                      <p className="text-xs text-gray-400">{lo.reviews} reviews</p>
+                      <p className="text-xs text-gray-400">{lo.review_count} reviews</p>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
                     <div className="flex gap-1.5 flex-wrap">
-                      {lo.specialties.map((s) => (
+                      {lo.specialties?.map((s: string) => (
                         <span key={s} className="text-xs bg-gray-50 text-gray-600 px-2 py-0.5 rounded-full border border-gray-100">{s}</span>
                       ))}
-                      <span className="text-xs text-gray-400">{lo.experience} yrs exp</span>
+                      <span className="text-xs text-gray-400">{lo.years_experience} yrs exp</span>
                     </div>
                     <span className="text-xs text-green-800 font-medium">View profile →</span>
                   </div>

@@ -27,13 +27,6 @@ export default async function LoanOfficerProfile({ params }: { params: Promise<{
     )
   }
 
-  const colorMap: Record<string, string> = {
-    SJ: 'bg-green-100 text-green-900',
-    MC: 'bg-teal-100 text-teal-900',
-    DP: 'bg-orange-100 text-orange-900',
-    TR: 'bg-amber-100 text-amber-900',
-  }
-
   return (
     <main className="min-h-screen bg-white font-sans">
       {/* Nav */}
@@ -61,7 +54,7 @@ export default async function LoanOfficerProfile({ params }: { params: Promise<{
       <div className="max-w-4xl mx-auto px-6 py-10">
         {/* Profile Header */}
         <div className="flex flex-col sm:flex-row gap-6 mb-8 pb-8 border-b border-gray-100">
-          <div className={`w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold flex-shrink-0 ${colorMap[lo.initials] || 'bg-gray-100 text-gray-600'}`}>
+          <div className={`w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold flex-shrink-0 ${lo.avatar_color || 'bg-gray-100 text-gray-600'}`}>
             {lo.initials}
           </div>
           <div className="flex-1">
@@ -133,7 +126,7 @@ export default async function LoanOfficerProfile({ params }: { params: Promise<{
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <p className="text-sm font-medium text-gray-900">{review.reviewer_name}</p>
-                      <p className="text-xs text-gray-400">{review.city}, {review.state} · {new Date(review.created_at).toLocaleDateString('en-US', {month: 'long', year: 'numeric'})}</p>
+                      <p className="text-xs text-gray-400">{review.city && review.state ? `${review.city}, ${review.state} · ` : ''}{new Date(review.created_at).toLocaleDateString('en-US', {month: 'long', year: 'numeric'})}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-amber-500 text-sm">{'★'.repeat(review.rating)}</p>
