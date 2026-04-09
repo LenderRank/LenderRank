@@ -84,23 +84,23 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-400 text-sm">Loading dashboard...</p>
+      <main className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <p className="text-gray-400 dark:text-gray-500 text-sm">Loading dashboard...</p>
       </main>
     )
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 font-sans">
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 font-sans">
       {/* Admin Nav */}
-      <nav className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white">
+      <nav className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-900">
         <div className="flex items-center gap-3">
-          <Link href="/" className="text-2xl font-bold text-green-800" style={{fontFamily: 'Georgia, serif'}}>LenderRep</Link>
-          <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-md font-medium">Admin</span>
+          <Link href="/" className="text-2xl font-bold text-green-800 dark:text-green-400" style={{fontFamily: 'Georgia, serif'}}>LenderRep</Link>
+          <span className="text-xs bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-400 px-2 py-0.5 rounded-md font-medium">Admin</span>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/" className="text-sm text-gray-500 hover:text-green-800">View site</Link>
-          <button onClick={() => supabase.auth.signOut().then(() => router.push('/'))} className="text-sm text-gray-400 hover:text-gray-600">Sign out</button>
+          <Link href="/" className="text-sm text-gray-500 dark:text-gray-400 hover:text-green-800 dark:hover:text-green-400">View site</Link>
+          <button onClick={() => supabase.auth.signOut().then(() => router.push('/'))} className="text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">Sign out</button>
         </div>
       </nav>
 
@@ -114,20 +114,20 @@ export default function AdminDashboard() {
             { label: 'Pending approval', value: stats.pendingReviews, highlight: stats.pendingReviews > 0 },
             { label: 'Cities active', value: 1 },
           ].map((stat) => (
-            <div key={stat.label} className={`bg-white border rounded-xl p-4 text-center ${stat.highlight ? 'border-amber-200 bg-amber-50' : 'border-gray-100'}`}>
-              <p className={`text-2xl font-bold mb-1 ${stat.highlight ? 'text-amber-600' : 'text-gray-900'}`}>{stat.value}</p>
-              <p className="text-xs text-gray-500">{stat.label}</p>
+            <div key={stat.label} className={`bg-white dark:bg-gray-800 border rounded-xl p-4 text-center ${stat.highlight ? 'border-amber-200 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20' : 'border-gray-100 dark:border-gray-700'}`}>
+              <p className={`text-2xl font-bold mb-1 ${stat.highlight ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-white'}`}>{stat.value}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{stat.label}</p>
             </div>
           ))}
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-lg w-fit">
+        <div className="flex gap-1 mb-6 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg w-fit">
           {['reviews', 'officers'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-md text-sm font-medium capitalize transition-all ${activeTab === tab ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`px-4 py-2 rounded-md text-sm font-medium capitalize transition-all ${activeTab === tab ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
             >
               {tab === 'reviews' ? `Reviews ${stats.pendingReviews > 0 ? `(${stats.pendingReviews} pending)` : ''}` : 'Loan Officers'}
             </button>
@@ -138,30 +138,30 @@ export default function AdminDashboard() {
         {activeTab === 'reviews' && (
           <div className="space-y-4">
             {reviews.length === 0 ? (
-              <div className="bg-white border border-gray-100 rounded-xl p-8 text-center">
-                <p className="text-gray-400 text-sm">No reviews yet</p>
+              <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl p-8 text-center">
+                <p className="text-gray-400 dark:text-gray-500 text-sm">No reviews yet</p>
               </div>
             ) : (
               reviews.map((review) => (
-                <div key={review.id} className={`bg-white border rounded-xl p-5 ${!review.is_approved ? 'border-amber-200' : 'border-gray-100'}`}>
+                <div key={review.id} className={`bg-white dark:bg-gray-800 border rounded-xl p-5 ${!review.is_approved ? 'border-amber-200 dark:border-amber-700' : 'border-gray-100 dark:border-gray-700'}`}>
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-medium text-gray-900">{review.reviewer_name}</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{review.reviewer_name}</p>
                         <span className="text-amber-500 text-sm">{'★'.repeat(review.rating)}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${review.is_approved ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${review.is_approved ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'}`}>
                           {review.is_approved ? 'Approved' : 'Pending'}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-400">
-                        For: <span className="font-medium text-gray-600">{review.loan_officers?.name}</span> · {review.loan_type} · {review.closing_date}
+                      <p className="text-xs text-gray-400 dark:text-gray-500">
+                        For: <span className="font-medium text-gray-600 dark:text-gray-300">{review.loan_officers?.name}</span> · {review.loan_type} · {review.closing_date}
                       </p>
-                      <p className="text-xs text-gray-400">NMLS submitted: {review.nmls_submitted}</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500">NMLS submitted: {review.nmls_submitted}</p>
                     </div>
-                    <p className="text-xs text-gray-400 flex-shrink-0">{new Date(review.created_at).toLocaleDateString()}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">{new Date(review.created_at).toLocaleDateString()}</p>
                   </div>
 
-                  <p className="text-sm text-gray-600 leading-relaxed mb-4 bg-gray-50 rounded-lg p-3">{review.review_text}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-4 bg-gray-50 dark:bg-gray-700 rounded-lg p-3">{review.review_text}</p>
 
                   {!review.is_approved && (
                     <div className="flex gap-2">
@@ -173,7 +173,7 @@ export default function AdminDashboard() {
                       </button>
                       <button
                         onClick={() => rejectReview(review.id)}
-                        className="flex-1 border border-red-200 text-red-600 py-2 rounded-lg text-sm hover:bg-red-50"
+                        className="flex-1 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 py-2 rounded-lg text-sm hover:bg-red-50 dark:hover:bg-red-900/20"
                       >
                         Reject & delete
                       </button>
@@ -189,24 +189,24 @@ export default function AdminDashboard() {
         {activeTab === 'officers' && (
           <div className="space-y-3">
             {officers.map((lo, index) => (
-              <div key={lo.id} className="bg-white border border-gray-100 rounded-xl p-4 flex items-center gap-4">
-                <span className="text-lg font-bold text-gray-200 w-6 text-center">{index + 1}</span>
+              <div key={lo.id} className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl p-4 flex items-center gap-4">
+                <span className="text-lg font-bold text-gray-200 dark:text-gray-600 w-6 text-center">{index + 1}</span>
                 <div className="w-10 h-10 rounded-full bg-green-100 text-green-900 flex items-center justify-center text-sm font-bold flex-shrink-0">
                   {lo.initials}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <p className="text-sm font-medium text-gray-900">{lo.name}</p>
-                    {lo.is_verified && <span className="text-xs bg-green-50 text-green-700 px-1.5 py-0.5 rounded">Verified</span>}
-                    {lo.is_claimed && <span className="text-xs bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded">Claimed</span>}
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{lo.name}</p>
+                    {lo.is_verified && <span className="text-xs bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-1.5 py-0.5 rounded">Verified</span>}
+                    {lo.is_claimed && <span className="text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-1.5 py-0.5 rounded">Claimed</span>}
                   </div>
-                  <p className="text-xs text-gray-400">{lo.company} · {lo.city}, {lo.state} · NMLS #{lo.nmls_id}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">{lo.company} · {lo.city}, {lo.state} · NMLS #{lo.nmls_id}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-bold text-gray-900">{lo.avg_rating} ★</p>
-                  <p className="text-xs text-gray-400">{lo.review_count} reviews</p>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white">{lo.avg_rating} ★</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">{lo.review_count} reviews</p>
                 </div>
-                <Link href={`/loan-officers/${lo.slug}`} className="text-xs text-green-800 hover:underline ml-2">View →</Link>
+                <Link href={`/loan-officers/${lo.slug}`} className="text-xs text-green-800 dark:text-green-400 hover:underline ml-2">View →</Link>
               </div>
             ))}
           </div>

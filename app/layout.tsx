@@ -27,6 +27,16 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        {/* Runs before hydration to apply saved theme and prevent flash */}
+        <script dangerouslySetInnerHTML={{__html: `
+          try {
+            var t = localStorage.getItem('theme');
+            var d = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (t === 'dark' || (!t && d)) document.documentElement.classList.add('dark');
+          } catch(e) {}
+        `}} />
+      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
