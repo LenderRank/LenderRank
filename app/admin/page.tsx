@@ -20,6 +20,23 @@ export default function AdminDashboard() {
         router.push('/sign-in')
         return
       }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .single()
+
+      const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL
+      const isAuthorized =
+        profile?.role === 'loan_officer' ||
+        (adminEmail && session.user.email === adminEmail)
+
+      if (!isAuthorized) {
+        router.push('/')
+        return
+      }
+
       fetchData()
     }
     checkAdmin()

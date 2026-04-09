@@ -1,15 +1,33 @@
+'use client'
+
 import Link from 'next/link'
+import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 
-export default async function RaleighPage() {
-  const { data: officers } = await supabase
-    .from('loan_officers')
-    .select('id, name, slug, company, city, state, initials, avatar_color, avg_rating, review_count, years_experience, specialties')
-    .eq('city', 'Raleigh')
-    .eq('state', 'NC')
-    .order('ranking_score', { ascending: false })
+const FILTERS = ['All', 'FHA', 'VA', 'Conventional', 'Jumbo', 'First-time buyer', 'Reverse Mortgage']
 
-  const officerList = officers ?? []
+export default function RaleighPage() {
+  const [officers, setOfficers] = useState<any[]>([])
+  const [activeFilter, setActiveFilter] = useState('All')
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    supabase
+      .from('loan_officers')
+      .select('id, name, slug, company, city, state, initials, avatar_color, avg_rating, review_count, years_experience, specialties')
+      .eq('city', 'Raleigh')
+      .eq('state', 'NC')
+      .order('ranking_score', { ascending: false })
+      .then(({ data }) => {
+        setOfficers(data ?? [])
+        setLoading(false)
+      })
+  }, [])
+
+  const filtered = activeFilter === 'All'
+    ? officers
+    : officers.filter((lo) => lo.specialties?.includes(activeFilter))
+
   return (
     <main className="min-h-screen bg-white dark:bg-gray-900 font-sans">
       {/* Nav */}
@@ -47,7 +65,7 @@ export default async function RaleighPage() {
             Browse and compare the highest-rated licensed loan officers in Raleigh based on verified client reviews. All officers are NMLS verified.
           </p>
           <div className="flex flex-wrap gap-4 text-xs text-green-800 dark:text-green-400">
-            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-600 inline-block"></span>{officerList.length} loan officers listed</span>
+            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-600 inline-block"></span>{officers.length} loan officers listed</span>
             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-600 inline-block"></span>All NMLS verified</span>
             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-600 inline-block"></span>Ranked by verified reviews</span>
           </div>
@@ -58,8 +76,16 @@ export default async function RaleighPage() {
       <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-900">
         <div className="max-w-4xl mx-auto flex gap-2 flex-wrap">
           <span className="text-xs text-gray-500 dark:text-gray-400 self-center mr-1">Filter by:</span>
-          {['All', 'FHA', 'VA', 'Conventional', 'Jumbo', 'First-time buyer', 'Reverse Mortgage'].map((f) => (
-            <button key={f} className={`text-xs px-3 py-1.5 rounded-full border ${f === 'All' ? 'bg-green-800 text-white border-green-800' : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-green-300 hover:text-green-800 dark:hover:border-green-600 dark:hover:text-green-400'}`}>
+          {FILTERS.map((f) => (
+            <button
+              key={f}
+              onClick={() => setActiveFilter(f)}
+              className={`text-xs px-3 py-1.5 rounded-full border transition-all ${
+                activeFilter === f
+                  ? 'bg-green-800 text-white border-green-800'
+                  : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-green-300 hover:text-green-800 dark:hover:border-green-600 dark:hover:text-green-400'
+              }`}
+            >
               {f}
             </button>
           ))}
@@ -69,52 +95,65 @@ export default async function RaleighPage() {
       {/* Officer List */}
       <section className="px-6 py-8">
         <div className="max-w-4xl mx-auto space-y-4">
-          {officerList.map((lo, index) => (
-            <Link href={`/loan-officers/${lo.slug}`} key={lo.slug}>
-              <div className="border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-xl p-5 hover:border-green-200 dark:hover:border-green-700 hover:shadow-sm cursor-pointer flex gap-4 items-start transition-all">
-                {/* Rank */}
-                <div className="text-lg font-bold text-gray-200 dark:text-gray-600 w-6 text-center flex-shrink-0 mt-1">
-                  {index + 1}
-                </div>
+          {loading ? (
+            <div className="py-12 text-center text-sm text-gray-400 dark:text-gray-500">Loading...</div>
+          ) : filtered.length === 0 ? (
+            <div className="py-12 text-center">
+              <p className="text-sm text-gray-400 dark:text-gray-500 mb-1">No loan officers found for "{activeFilter}"</p>
+              <button onClick={() => setActiveFilter('All')} className="text-xs text-green-800 dark:text-green-400 hover:underline">Clear filter</button>
+            </div>
+          ) : (
+            filtered.map((lo, index) => (
+              <Link href={`/loan-officers/${lo.slug}`} key={lo.slug}>
+                <div className="border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-xl p-5 hover:border-green-200 dark:hover:border-green-700 hover:shadow-sm cursor-pointer flex gap-4 items-start transition-all">
+                  {/* Rank */}
+                  <div className="text-lg font-bold text-gray-200 dark:text-gray-600 w-6 text-center flex-shrink-0 mt-1">
+                    {index + 1}
+                  </div>
 
-                {/* Avatar */}
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${lo.avatar_color}`}>
-                  {lo.initials}
-                </div>
+                  {/* Avatar */}
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${lo.avatar_color}`}>
+                    {lo.initials}
+                  </div>
 
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h2 className="text-base font-bold text-gray-900 dark:text-white">{lo.name}</h2>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{lo.company} · Raleigh, NC</p>
-                      <span className="inline-flex items-center gap-1 text-xs bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-400 px-2 py-0.5 rounded-md">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-600 inline-block"></span>
-                        NMLS Verified
-                      </span>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className="flex items-center gap-1 justify-end mb-1">
-                        <span className="text-base font-bold text-gray-900 dark:text-white">{lo.avg_rating}</span>
-                        <span className="text-amber-500 text-sm">★★★★★</span>
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h2 className="text-base font-bold text-gray-900 dark:text-white">{lo.name}</h2>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{lo.company} · Raleigh, NC</p>
+                        <span className="inline-flex items-center gap-1 text-xs bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-400 px-2 py-0.5 rounded-md">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-600 inline-block"></span>
+                          NMLS Verified
+                        </span>
                       </div>
-                      <p className="text-xs text-gray-400 dark:text-gray-500">{lo.review_count} reviews</p>
+                      <div className="text-right flex-shrink-0">
+                        <div className="flex items-center gap-1 justify-end mb-1">
+                          <span className="text-base font-bold text-gray-900 dark:text-white">{lo.avg_rating}</span>
+                          <span className="text-amber-500 text-sm">★★★★★</span>
+                        </div>
+                        <p className="text-xs text-gray-400 dark:text-gray-500">{lo.review_count} reviews</p>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50 dark:border-gray-700">
-                    <div className="flex gap-1.5 flex-wrap">
-                      {lo.specialties?.map((s: string) => (
-                        <span key={s} className="text-xs bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded-full border border-gray-100 dark:border-gray-600">{s}</span>
-                      ))}
-                      <span className="text-xs text-gray-400 dark:text-gray-500">{lo.years_experience} yrs exp</span>
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50 dark:border-gray-700">
+                      <div className="flex gap-1.5 flex-wrap">
+                        {lo.specialties?.map((s: string) => (
+                          <span key={s} className={`text-xs px-2 py-0.5 rounded-full border ${
+                            s === activeFilter
+                              ? 'bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-400 border-green-200 dark:border-green-700'
+                              : 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-100 dark:border-gray-600'
+                          }`}>{s}</span>
+                        ))}
+                        <span className="text-xs text-gray-400 dark:text-gray-500">{lo.years_experience} yrs exp</span>
+                      </div>
+                      <span className="text-xs text-green-800 dark:text-green-400 font-medium">View profile →</span>
                     </div>
-                    <span className="text-xs text-green-800 dark:text-green-400 font-medium">View profile →</span>
                   </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            ))
+          )}
         </div>
       </section>
 

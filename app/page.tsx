@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Form from 'next/form'
 import Navbar from './components/Navbar'
 import { supabase } from './lib/supabase'
 
@@ -18,10 +19,10 @@ export default async function Home() {
         <span className="inline-block bg-green-200 dark:bg-green-900/50 text-green-900 dark:text-green-300 text-xs font-medium px-3 py-1 rounded-md mb-4">Based on verified client reviews</span>
         <h1 className="text-4xl font-bold text-green-950 dark:text-white mb-3" style={{fontFamily: 'Georgia, serif'}}>Find a top-rated loan officer<br/>near you</h1>
         <p className="text-green-800 dark:text-green-300 text-base mb-8">Real reviews from real clients. Only licensed, NMLS-verified loan officers.</p>
-        <div className="flex max-w-xl mx-auto bg-white dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600 overflow-hidden mb-4">
-          <input type="text" placeholder="City, ZIP code, or name..." className="flex-1 px-4 py-3 text-sm outline-none text-gray-700 dark:text-gray-200 bg-transparent placeholder:text-gray-400 dark:placeholder:text-gray-500"/>
-          <button className="bg-green-800 text-white px-5 py-3 text-sm font-medium hover:bg-green-700">Search</button>
-        </div>
+        <Form action="/search" className="flex max-w-xl mx-auto bg-white dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600 overflow-hidden mb-4">
+          <input type="text" name="q" placeholder="City, ZIP code, or name..." className="flex-1 px-4 py-3 text-sm outline-none text-gray-700 dark:text-gray-200 bg-transparent placeholder:text-gray-400 dark:placeholder:text-gray-500"/>
+          <button type="submit" className="bg-green-800 text-white px-5 py-3 text-sm font-medium hover:bg-green-700">Search</button>
+        </Form>
         <div className="flex justify-center gap-5 flex-wrap text-green-800 dark:text-green-400 text-xs">
           <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-600 inline-block"></span>NMLS verified only</span>
           <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-600 inline-block"></span>Verified client reviews</span>

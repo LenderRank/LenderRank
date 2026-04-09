@@ -36,12 +36,16 @@ LenderRep is a review and discovery platform for licensed mortgage loan officers
 | Route | File | Type | Status |
 |---|---|---|---|
 | `/` | `app/page.tsx` | Server Component | ✅ Live data |
-| `/loan-officers/raleigh-nc` | `app/loan-officers/raleigh-nc/page.tsx` | Server Component | ✅ Live data |
+| `/search` | `app/search/page.tsx` | Server Component | ✅ Live data |
+| `/loan-officers/raleigh-nc` | `app/loan-officers/raleigh-nc/page.tsx` | Client Component | ✅ Live data + filters |
 | `/loan-officers/[slug]` | `app/loan-officers/[slug]/page.tsx` | Server Component | ✅ Live data |
 | `/leave-review` | `app/leave-review/page.tsx` | Client Component | ✅ Saves to DB |
 | `/sign-in` | `app/sign-in/page.tsx` | Client Component | ✅ |
 | `/sign-up` | `app/sign-up/page.tsx` | Client Component | ✅ |
-| `/admin` | `app/admin/page.tsx` | Client Component | ✅ Auth-gated |
+| `/admin` | `app/admin/page.tsx` | Client Component | ✅ Role-gated |
+| `/claim` | `app/claim/page.tsx` | Server Component | ✅ |
+| `/account` | `app/account/page.tsx` | Client Component | ✅ Auth-gated |
+| `/forgot-password` | `app/forgot-password/page.tsx` | Client Component | ✅ |
 
 ---
 
@@ -123,19 +127,23 @@ Recalculated by admin when a review is approved.
 app/
   layout.tsx              Root layout; anti-flash script; suppressHydrationWarning
   globals.css             @import tailwindcss; @config tailwind.config.js
-  page.tsx                Homepage — fetches top 4 officers by ranking_score
+  page.tsx                Homepage — fetches top 4 officers; search via next/form → /search
+  search/page.tsx         Search results — queries Supabase by name/city/state via ?q=
   components/
     Navbar.tsx            Auth state + ThemeToggle
     ThemeToggle.tsx       Dark mode button
   lib/
     supabase.ts           Supabase client (uses NEXT_PUBLIC_ env vars)
   loan-officers/
-    raleigh-nc/page.tsx   City listing — fetches officers WHERE city=Raleigh, state=NC
+    raleigh-nc/page.tsx   City listing — Client Component; client-side specialty filters
     [slug]/page.tsx       Profile page — fetches officer + approved reviews by slug
   leave-review/page.tsx   4-step review submission form
   sign-in/page.tsx
   sign-up/page.tsx
-  admin/page.tsx          Review approval + officer listing dashboard
+  admin/page.tsx          Review approval + officer listing; role-gated (loan_officer or ADMIN_EMAIL)
+  claim/page.tsx          Claim profile landing page
+  account/page.tsx        Edit first/last name; link to forgot-password
+  forgot-password/page.tsx  Supabase resetPasswordForEmail flow
 supabase/
   schema.sql              Run first — creates tables + RLS policies
   seed.sql                Run second — inserts 4 Raleigh officers (idempotent via DELETE+INSERT)
@@ -150,20 +158,20 @@ Stored in `.env.local` (not committed):
 ```
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+NEXT_PUBLIC_ADMIN_EMAIL=...   # email address that can access /admin regardless of role
 ```
 
 ---
 
 ## Known Gaps / Future Work
 
-- [ ] Admin page has no role check — any signed-in user can access `/admin`
-- [ ] Search bar on homepage is non-functional (UI only)
-- [ ] Filter buttons on Raleigh city page are UI-only (no actual filtering)
 - [ ] Review form does not collect reviewer city/state (displayed conditionally in profile)
-- [ ] `/claim`, `/states`, `/account`, `/forgot-password` routes do not exist yet
+- [ ] `/states` route does not exist yet
 - [ ] Only Raleigh, NC has data — "Browse by state" section is hardcoded placeholder counts
 - [ ] No email notifications when a review is submitted or approved
 - [ ] No way for loan officers to confirm transactions from their side
+- [ ] Account page cannot change email (Supabase requires separate verification flow)
+- [ ] Claim flow doesn't actually verify NMLS ID — loan officers land on sign-up after clicking through
 
 ---
 
@@ -186,3 +194,10 @@ Built homepage, loan officer profile page, Raleigh city page, sign-in, sign-up, 
 - Added `suppressHydrationWarning` on `<html>` to silence React mismatch from anti-flash script
 - Applied `dark:` classes across all 7 pages and both components
 - Fixed hydration mismatch error caused by anti-flash script modifying `<html>` className
+
+### Session 4 — Auth hardening, search, filters, missing routes
+- **Admin role check:** `/admin` now checks `profiles.role === 'loan_officer'` OR `session.user.email === NEXT_PUBLIC_ADMIN_EMAIL`; all others redirected to homepage
+- **Search:** Homepage search bar wired up via `next/form` → `/search?q=`; results page queries Supabase with `.ilike` on name, city, state
+- **Raleigh filters:** Converted `raleigh-nc/page.tsx` from Server to Client Component; filters apply client-side against the fetched officer list; active specialty highlighted on each card
+- **New pages:** `/claim` (loan officer CTA), `/account` (edit name, link to change password), `/forgot-password` (Supabase resetPasswordForEmail with success state)
+- **Added env var:** `NEXT_PUBLIC_ADMIN_EMAIL` controls admin access bypass by email
