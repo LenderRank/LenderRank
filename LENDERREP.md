@@ -117,7 +117,7 @@ Recalculated by admin when a review is approved.
 - Sign-up creates a row in `profiles` table
 - `Navbar` detects session via `supabase.auth.getSession()` + `onAuthStateChange`
 - Leave-review page redirects to `/sign-in` if no session
-- Admin page redirects to `/sign-in` if no session (no role check yet — any authenticated user can access)
+- Admin page redirects to `/sign-in` if no session; then checks `profiles.role === 'loan_officer'` or `NEXT_PUBLIC_ADMIN_EMAIL` match — everyone else redirected to homepage
 
 ---
 
@@ -212,3 +212,7 @@ Built homepage, loan officer profile page, Raleigh city page, sign-in, sign-up, 
 - **Raleigh filters:** Converted `raleigh-nc/page.tsx` from Server to Client Component; filters apply client-side against the fetched officer list; active specialty highlighted on each card
 - **New pages:** `/claim` (loan officer CTA), `/account` (edit name, link to change password), `/forgot-password` (Supabase resetPasswordForEmail with success state)
 - **Added env var:** `NEXT_PUBLIC_ADMIN_EMAIL` controls admin access bypass by email
+
+### Session 5 — Standing instructions
+- Added permanent **Standing Instructions** section to top of `LENDERREP.md` (never guess/assume; verify over speed; read before writing; present options don't pick silently)
+- Fixed stale note in Authentication section — admin role check was added in Session 4
