@@ -29,12 +29,13 @@ CREATE TABLE IF NOT EXISTS loan_officers (
 -- PROFILES (extends Supabase auth.users)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS profiles (
-  id          UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  email       TEXT,
-  first_name  TEXT,
-  last_name   TEXT,
-  role        TEXT DEFAULT 'homebuyer',
-  created_at  TIMESTAMPTZ DEFAULT NOW()
+  id               UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email            TEXT,
+  first_name       TEXT,
+  last_name        TEXT,
+  role             TEXT DEFAULT 'homebuyer',
+  claimed_nmls_id  TEXT,   -- set during claim flow; cleared after claim is applied
+  created_at       TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ============================================================
@@ -54,6 +55,16 @@ CREATE TABLE IF NOT EXISTS reviews (
   state            TEXT,
   is_approved      BOOLEAN DEFAULT false,
   is_confirmed     BOOLEAN DEFAULT false,
+  created_at       TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================
+-- CLAIM WAITLIST (LOs whose profiles aren't in the system yet)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS claim_waitlist (
+  id               UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  email            TEXT NOT NULL,
+  nmls_id_entered  TEXT,
   created_at       TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -119,5 +130,18 @@ CREATE POLICY "Authenticated update reviews"
 -- reviews: authenticated users can delete
 CREATE POLICY "Authenticated delete reviews"
   ON reviews FOR DELETE
+  TO authenticated
+  USING (true);
+
+ALTER TABLE claim_waitlist ENABLE ROW LEVEL SECURITY;
+
+-- claim_waitlist: anyone can insert (unauthenticated LOs joining waitlist)
+CREATE POLICY "Public insert claim_waitlist"
+  ON claim_waitlist FOR INSERT
+  WITH CHECK (true);
+
+-- claim_waitlist: only authenticated users can read (admin use)
+CREATE POLICY "Authenticated read claim_waitlist"
+  ON claim_waitlist FOR SELECT
   TO authenticated
   USING (true);

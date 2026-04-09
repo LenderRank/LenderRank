@@ -1,18 +1,26 @@
 'use client'
 
+import { Suspense, useState } from 'react'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { supabase } from '../lib/supabase'
 import Footer from '../components/Footer'
-export default function SignUp() {
+
+function SignUpContent() {
+  const searchParams = useSearchParams()
+  const nmlsParam = searchParams.get('nmls')
+
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [role, setRole] = useState('homebuyer')
+  // When coming from the claim flow, role is locked to loan_officer
+  const [role, setRole] = useState(nmlsParam ? 'loan_officer' : 'homebuyer')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+
+  const effectiveRole = nmlsParam ? 'loan_officer' : role
 
   const handleSignUp = async () => {
     if (!firstName || !lastName || !email || !password) {
@@ -33,7 +41,7 @@ export default function SignUp() {
         data: {
           first_name: firstName,
           last_name: lastName,
-          role,
+          role: effectiveRole,
         }
       }
     })
@@ -45,15 +53,20 @@ export default function SignUp() {
     }
 
     if (data.user) {
+      const profileData: Record<string, string> = {
+        id: data.user.id,
+        email,
+        first_name: firstName,
+        last_name: lastName,
+        role: effectiveRole,
+      }
+      if (nmlsParam) {
+        profileData.claimed_nmls_id = nmlsParam
+      }
+
       const { error: profileError } = await supabase
         .from('profiles')
-        .insert({
-          id: data.user.id,
-          email,
-          first_name: firstName,
-          last_name: lastName,
-          role,
-        })
+        .insert(profileData)
 
       if (profileError) {
         console.error('Profile error:', profileError)
@@ -74,8 +87,22 @@ export default function SignUp() {
           <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-8 w-full max-w-md text-center">
             <div className="w-14 h-14 rounded-full bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-400 flex items-center justify-center text-2xl mx-auto mb-4">✓</div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2" style={{fontFamily: 'Georgia, serif'}}>Check your email!</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">We sent a confirmation link to <strong className="text-gray-700 dark:text-gray-300">{email}</strong>. Click the link to activate your account.</p>
-            <Link href="/sign-in" className="block w-full bg-green-800 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-green-700 text-center">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+              We sent a confirmation link to <strong className="text-gray-700 dark:text-gray-300">{email}</strong>.
+            </p>
+            {nmlsParam ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                Once you confirm your email, sign in to complete your profile claim for NMLS #{nmlsParam}.
+              </p>
+            ) : (
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                Click the link to activate your account.
+              </p>
+            )}
+            <Link
+              href={nmlsParam ? `/sign-in?nmls=${encodeURIComponent(nmlsParam)}` : '/sign-in'}
+              className="block w-full bg-green-800 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-green-700 text-center"
+            >
               Go to sign in
             </Link>
           </div>
@@ -92,6 +119,13 @@ export default function SignUp() {
 
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-8 w-full max-w-md">
+
+          {nmlsParam && (
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 text-green-800 dark:text-green-300 text-sm px-4 py-3 rounded-lg mb-6">
+              Claiming NMLS #{nmlsParam} — your account will be set up as a Loan Officer.
+            </div>
+          )}
+
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1" style={{fontFamily: 'Georgia, serif'}}>Create your account</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Free forever. No credit card required.</p>
 
@@ -148,23 +182,25 @@ export default function SignUp() {
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Minimum 8 characters</p>
             </div>
 
-            <div>
-              <label className="text-xs font-medium text-gray-600 dark:text-gray-400 block mb-1.5">I am a...</label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => setRole('homebuyer')}
-                  className={`border-2 rounded-lg py-2.5 text-sm font-medium transition-all ${role === 'homebuyer' ? 'border-green-800 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-400' : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-green-300 dark:hover:border-green-700'}`}
-                >
-                  Homebuyer
-                </button>
-                <button
-                  onClick={() => setRole('loan_officer')}
-                  className={`border-2 rounded-lg py-2.5 text-sm font-medium transition-all ${role === 'loan_officer' ? 'border-green-800 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-400' : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-green-300 dark:hover:border-green-700'}`}
-                >
-                  Loan Officer
-                </button>
+            {!nmlsParam && (
+              <div>
+                <label className="text-xs font-medium text-gray-600 dark:text-gray-400 block mb-1.5">I am a...</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setRole('homebuyer')}
+                    className={`border-2 rounded-lg py-2.5 text-sm font-medium transition-all ${role === 'homebuyer' ? 'border-green-800 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-400' : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-green-300 dark:hover:border-green-700'}`}
+                  >
+                    Homebuyer
+                  </button>
+                  <button
+                    onClick={() => setRole('loan_officer')}
+                    className={`border-2 rounded-lg py-2.5 text-sm font-medium transition-all ${role === 'loan_officer' ? 'border-green-800 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-400' : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-green-300 dark:hover:border-green-700'}`}
+                  >
+                    Loan Officer
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             <button
               onClick={handleSignUp}
@@ -189,12 +225,25 @@ export default function SignUp() {
 
           <p className="text-center text-sm text-gray-500 dark:text-gray-400">
             Already have an account?{' '}
-            <Link href="/sign-in" className="text-green-800 dark:text-green-400 font-medium hover:underline">Sign in</Link>
+            <Link
+              href={nmlsParam ? `/sign-in?nmls=${encodeURIComponent(nmlsParam)}` : '/sign-in'}
+              className="text-green-800 dark:text-green-400 font-medium hover:underline"
+            >
+              Sign in
+            </Link>
           </p>
         </div>
       </div>
 
       <Footer />
     </main>
+  )
+}
+
+export default function SignUp() {
+  return (
+    <Suspense fallback={null}>
+      <SignUpContent />
+    </Suspense>
   )
 }

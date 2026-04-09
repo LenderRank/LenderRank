@@ -1,13 +1,31 @@
 'use client'
 
+import { Suspense, useState } from 'react'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { supabase } from '../lib/supabase'
 import { useRouter } from 'next/navigation'
 import Footer from '../components/Footer'
 
-export default function SignIn() {
+async function completeClaim(userId: string, nmlsId: string) {
+  // Only claim if the profile hasn't been claimed yet
+  await supabase
+    .from('loan_officers')
+    .update({ is_claimed: true })
+    .eq('nmls_id', nmlsId)
+    .eq('is_claimed', false)
+
+  await supabase
+    .from('profiles')
+    .update({ role: 'loan_officer', claimed_nmls_id: null })
+    .eq('id', userId)
+}
+
+function SignInContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const nmlsParam = searchParams.get('nmls')
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -21,7 +39,7 @@ export default function SignIn() {
     setLoading(true)
     setError('')
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
@@ -29,6 +47,28 @@ export default function SignIn() {
     if (signInError) {
       setError(signInError.message)
       setLoading(false)
+      return
+    }
+
+    const userId = data.user.id
+
+    if (nmlsParam) {
+      // Came directly from the claim flow with an NMLS ID in the URL
+      await completeClaim(userId, nmlsParam)
+      router.push('/account')
+      return
+    }
+
+    // No URL param — check if this user has a pending claim stored in their profile
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('claimed_nmls_id')
+      .eq('id', userId)
+      .single()
+
+    if (profile?.claimed_nmls_id) {
+      await completeClaim(userId, profile.claimed_nmls_id)
+      router.push('/account')
       return
     }
 
@@ -43,6 +83,12 @@ export default function SignIn() {
 
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-8 w-full max-w-md">
+          {nmlsParam && (
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 text-green-800 dark:text-green-300 text-sm px-4 py-3 rounded-lg mb-6">
+              Sign in to complete your claim for NMLS #{nmlsParam}.
+            </div>
+          )}
+
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1" style={{fontFamily: 'Georgia, serif'}}>Welcome back</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Sign in to your LenderRep account</p>
 
@@ -93,19 +139,34 @@ export default function SignIn() {
 
           <p className="text-center text-sm text-gray-500 dark:text-gray-400">
             Don&apos;t have an account?{' '}
-            <Link href="/sign-up" className="text-green-800 dark:text-green-400 font-medium hover:underline">Sign up free</Link>
+            <Link
+              href={nmlsParam ? `/sign-up?nmls=${encodeURIComponent(nmlsParam)}` : '/sign-up'}
+              className="text-green-800 dark:text-green-400 font-medium hover:underline"
+            >
+              Sign up free
+            </Link>
           </p>
 
-          <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
-            <p className="text-center text-xs text-gray-400 dark:text-gray-500 mb-3">Are you a loan officer?</p>
-            <Link href="/claim" className="block text-center text-sm border border-green-200 dark:border-green-700 text-green-800 dark:text-green-400 py-2.5 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20">
-              Claim your profile instead
-            </Link>
-          </div>
+          {!nmlsParam && (
+            <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
+              <p className="text-center text-xs text-gray-400 dark:text-gray-500 mb-3">Are you a loan officer?</p>
+              <Link href="/claim" className="block text-center text-sm border border-green-200 dark:border-green-700 text-green-800 dark:text-green-400 py-2.5 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20">
+                Claim your profile instead
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 
       <Footer />
     </main>
+  )
+}
+
+export default function SignIn() {
+  return (
+    <Suspense fallback={null}>
+      <SignInContent />
+    </Suspense>
   )
 }

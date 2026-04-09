@@ -54,7 +54,7 @@ LenderRep is a review and discovery platform for licensed mortgage loan officers
 | `/sign-in` | `app/sign-in/page.tsx` | Client Component | ✅ |
 | `/sign-up` | `app/sign-up/page.tsx` | Client Component | ✅ |
 | `/admin` | `app/admin/page.tsx` | Client Component | ✅ Role-gated |
-| `/claim` | `app/claim/page.tsx` | Server Component | ✅ |
+| `/claim` | `app/claim/page.tsx` | Client Component | ✅ NMLS lookup + claim flow |
 | `/account` | `app/account/page.tsx` | Client Component | ✅ Auth-gated |
 | `/forgot-password` | `app/forgot-password/page.tsx` | Client Component | ✅ |
 
@@ -95,7 +95,7 @@ nmls_submitted, city, state, is_approved, is_confirmed, created_at
 **`profiles`**
 ```
 id (FK → auth.users), email, first_name, last_name,
-role ('homebuyer' | 'loan_officer'), created_at
+role ('homebuyer' | 'loan_officer'), claimed_nmls_id, created_at
 ```
 
 ### Ranking Algorithm
@@ -184,7 +184,7 @@ NEXT_PUBLIC_ADMIN_EMAIL=...   # email address that can access /admin regardless 
 - [ ] No email notifications when a review is submitted or approved
 - [ ] No way for loan officers to confirm transactions from their side
 - [ ] Account page cannot change email (Supabase requires separate verification flow)
-- [ ] Claim flow doesn't actually verify NMLS ID — loan officers land on sign-up after clicking through
+- [ ] No email notifications when a review is submitted or approved (email infra not set up)
 
 ---
 
@@ -225,3 +225,26 @@ Built homepage, loan officer profile page, Raleigh city page, sign-in, sign-up, 
 ### Session 5 — Standing instructions
 - Added permanent **Standing Instructions** section to top of `LENDERREP.md` (never guess/assume; verify over speed; read before writing; present options don't pick silently)
 - Fixed stale note in Authentication section — admin role check was added in Session 4
+
+### Session 7 — Real claim flow with NMLS verification
+- **`/claim` full rewrite:** Converted from static Server Component to multi-step Client Component
+  - Step 1: NMLS ID input → queries `loan_officers` table via `.eq('nmls_id', ...)`
+  - Step 2a (found): Profile preview card (initials, name, company, city/state, NMLS) + "Create account to claim" / "I already have an account" buttons; shows warning if already claimed
+  - Step 2b (not found): "We don't have your profile yet" message + email input → saves to `claim_waitlist` table → confirmation screen
+  - All steps wrapped in `<Suspense>` per Next.js 16 requirement for `useSearchParams` in production builds
+- **`/sign-up` updates:** Reads `?nmls=` param; if present, shows claim banner, locks role to `loan_officer`, stores `claimed_nmls_id` in profile insert, and links success screen to `/sign-in?nmls=X`
+- **`/sign-in` updates:** Reads `?nmls=` param; after successful sign-in, runs `completeClaim()` which sets `loan_officers.is_claimed = true` (only if currently false) and sets `profiles.role = 'loan_officer'` + clears `claimed_nmls_id`; also checks `profiles.claimed_nmls_id` as fallback for users returning from email confirmation without the URL param; redirects to `/account` after a claim, `/` otherwise
+- **Schema additions** (run in Supabase SQL Editor):
+  ```sql
+  ALTER TABLE profiles ADD COLUMN IF NOT EXISTS claimed_nmls_id TEXT;
+  CREATE TABLE IF NOT EXISTS claim_waitlist (
+    id               UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    email            TEXT NOT NULL,
+    nmls_id_entered  TEXT,
+    created_at       TIMESTAMPTZ DEFAULT NOW()
+  );
+  ALTER TABLE claim_waitlist ENABLE ROW LEVEL SECURITY;
+  CREATE POLICY "Public insert claim_waitlist" ON claim_waitlist FOR INSERT WITH CHECK (true);
+  CREATE POLICY "Authenticated read claim_waitlist" ON claim_waitlist FOR SELECT TO authenticated USING (true);
+  ```
+- **Known limitation:** Claim finalizes at sign-in (after email confirmation), not automatically on email confirmation itself — would require a server-side auth callback with service role key to automate fully
