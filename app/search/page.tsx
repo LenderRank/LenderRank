@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
 import { supabase } from '../lib/supabase'
 
 export default async function SearchPage({
@@ -99,6 +100,7 @@ export default async function SearchPage({
           </div>
         )}
       </div>
+      <Footer />
     </main>
   )
 }

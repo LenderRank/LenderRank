@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import Footer from '../components/Footer'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -26,7 +27,8 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 font-sans flex items-center justify-center px-4">
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 font-sans flex flex-col">
+      <div className="flex-1 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <Link href="/" className="text-2xl font-bold text-green-800 dark:text-green-400" style={{ fontFamily: 'Georgia, serif' }}>LenderRep</Link>
@@ -86,6 +88,8 @@ export default function ForgotPasswordPage() {
           )}
         </div>
       </div>
+      </div>
+      <Footer />
     </main>
   )
 }

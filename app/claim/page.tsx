@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
 
 export default function ClaimPage() {
   return (
@@ -44,10 +45,7 @@ export default function ClaimPage() {
         </div>
       </div>
 
-      <footer className="border-t border-gray-100 dark:border-gray-700 px-6 py-5 flex justify-between items-center">
-        <Link href="/" className="text-green-800 dark:text-green-400 font-bold" style={{ fontFamily: 'Georgia, serif' }}>LenderRep</Link>
-        <span className="text-xs text-gray-400 dark:text-gray-500">Not affiliated with NMLS or any government agency</span>
-      </footer>
+      <Footer />
     </main>
   )
 }

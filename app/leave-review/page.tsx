@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Footer from '../components/Footer'
 
 const steps = ['Confirm', 'Verify', 'Review', 'Done']
 
@@ -302,9 +303,7 @@ export default function LeaveReview() {
         </div>
       </div>
 
-      <footer className="border-t border-gray-100 dark:border-gray-700 px-6 py-4 text-center">
-        <span className="text-xs text-gray-400 dark:text-gray-500">Not affiliated with NMLS or any government agency</span>
-      </footer>
+      <Footer />
     </main>
   )
 }

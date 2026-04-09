@@ -66,6 +66,7 @@ LenderRep is a review and discovery platform for licensed mortgage loan officers
 |---|---|---|
 | `Navbar` | `app/components/Navbar.tsx` | Client; shows auth state, includes ThemeToggle |
 | `ThemeToggle` | `app/components/ThemeToggle.tsx` | Client; sun/moon toggle, reads/writes localStorage |
+| `Footer` | `app/components/Footer.tsx` | Server; NMLS disclaimer + LenderRep logo link; used on all pages |
 
 ---
 
@@ -143,6 +144,7 @@ app/
   components/
     Navbar.tsx            Auth state + ThemeToggle
     ThemeToggle.tsx       Dark mode button
+    Footer.tsx            NMLS disclaimer + logo; used on all 11 pages
   lib/
     supabase.ts           Supabase client (uses NEXT_PUBLIC_ env vars)
   loan-officers/
@@ -212,6 +214,13 @@ Built homepage, loan officer profile page, Raleigh city page, sign-in, sign-up, 
 - **Raleigh filters:** Converted `raleigh-nc/page.tsx` from Server to Client Component; filters apply client-side against the fetched officer list; active specialty highlighted on each card
 - **New pages:** `/claim` (loan officer CTA), `/account` (edit name, link to change password), `/forgot-password` (Supabase resetPasswordForEmail with success state)
 - **Added env var:** `NEXT_PUBLIC_ADMIN_EMAIL` controls admin access bypass by email
+
+### Session 6 — Global footer with NMLS disclaimer
+- Created `Footer` component (`app/components/Footer.tsx`) with NMLS Consumer Access disclaimer and LenderRep logo link
+- Replaced inline `<footer>` blocks on all 8 pages that had them (homepage, sign-in, sign-up, leave-review, Raleigh city page, profile page, account, claim)
+- Added `<Footer />` to 3 pages that previously had no footer (search, forgot-password, admin)
+- Restructured `forgot-password` layout from `flex items-center justify-center` to `flex flex-col` with a `flex-1` centering wrapper so the footer renders at the bottom
+- Disclaimer text: "License information sourced from NMLS Consumer Access. LenderRep is not affiliated with or endorsed by the Nationwide Multistate Licensing System."
 
 ### Session 5 — Standing instructions
 - Added permanent **Standing Instructions** section to top of `LENDERREP.md` (never guess/assume; verify over speed; read before writing; present options don't pick silently)

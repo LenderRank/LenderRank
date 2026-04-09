@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Form from 'next/form'
 import Navbar from './components/Navbar'
+import Footer from './components/Footer'
 import { supabase } from './lib/supabase'
 
 export default async function Home() {
@@ -109,11 +110,7 @@ export default async function Home() {
         <Link href="/claim" className="inline-block bg-green-800 text-white px-7 py-3 rounded-lg text-sm font-medium hover:bg-green-700">Claim your free profile</Link>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-100 dark:border-gray-700 px-6 py-5 flex justify-between items-center">
-        <span className="text-green-800 dark:text-green-400 font-bold" style={{fontFamily: 'Georgia, serif'}}>LenderRep</span>
-        <span className="text-xs text-gray-400 dark:text-gray-500">Not affiliated with NMLS or any government agency</span>
-      </footer>
+      <Footer />
     </main>
   )
 }

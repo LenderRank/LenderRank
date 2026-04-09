@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { supabase } from '../../lib/supabase'
+import Footer from '../../components/Footer'
 
 export default async function LoanOfficerProfile({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -165,11 +166,7 @@ export default async function LoanOfficerProfile({ params }: { params: Promise<{
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-100 dark:border-gray-700 px-6 py-5 flex justify-between items-center mt-10">
-        <Link href="/" className="text-green-800 dark:text-green-400 font-bold" style={{fontFamily: 'Georgia, serif'}}>LenderRep</Link>
-        <span className="text-xs text-gray-400 dark:text-gray-500">Not affiliated with NMLS or any government agency</span>
-      </footer>
+      <Footer />
     </main>
   )
 }
