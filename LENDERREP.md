@@ -5,6 +5,17 @@
 
 ---
 
+## Standing Instructions
+
+These apply every session, no exceptions:
+
+- **Never guess or assume.** If something is unclear, stop and ask before proceeding.
+- **Verify over speed.** It is always better to take extra time to verify than to build something wrong.
+- **Read before writing.** Before writing any new code, read the relevant existing files first.
+- **Present options, don't pick silently.** If two approaches exist, present the options and ask which to use.
+
+---
+
 ## What Is This
 
 LenderRep is a review and discovery platform for licensed mortgage loan officers. Homebuyers search for top-rated loan officers by city, read verified client reviews, and leave their own reviews. Loan officers can claim their profile and collect reviews to build reputation.
